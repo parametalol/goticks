@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/parametalol/go-ticks/ticker"
+	"github.com/parametalol/goticks/ticker"
 )
 
 // This example runs a loop, controlled by a periodic ticker.

@@ -1,11 +1,11 @@
-package go_ticks
+package goticks
 
 import (
 	"context"
 
-	"github.com/parametalol/go-ticks/loop"
-	"github.com/parametalol/go-ticks/ticker"
-	"github.com/parametalol/go-ticks/utils"
+	"github.com/parametalol/goticks/loop"
+	"github.com/parametalol/goticks/ticker"
+	"github.com/parametalol/goticks/utils"
 )
 
 type Task interface {

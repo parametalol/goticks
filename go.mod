@@ -1,4 +1,4 @@
-module github.com/parametalol/go-ticks
+module github.com/parametalol/goticks
 
 go 1.23.5
 

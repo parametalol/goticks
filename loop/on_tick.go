@@ -5,7 +5,7 @@ import (
 	"errors"
 	"iter"
 
-	"github.com/parametalol/go-ticks/utils"
+	"github.com/parametalol/goticks/utils"
 )
 
 // OnTick calls task on every tick from the ticker.

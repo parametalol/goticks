@@ -1,4 +1,4 @@
-package go_ticks
+package goticks
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/parametalol/go-ticks/ticker"
-	"github.com/parametalol/go-ticks/utils"
+	"github.com/parametalol/goticks/ticker"
+	"github.com/parametalol/goticks/utils"
 )
 
 func TestTask(t *testing.T) {

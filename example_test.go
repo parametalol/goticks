@@ -1,12 +1,12 @@
-package go_ticks
+package goticks
 
 import (
 	"context"
 	"fmt"
 	"os"
 
-	"github.com/parametalol/go-ticks/ticker"
-	"github.com/parametalol/go-ticks/utils"
+	"github.com/parametalol/goticks/ticker"
+	"github.com/parametalol/goticks/utils"
 )
 
 func ExampleNewTask() {
