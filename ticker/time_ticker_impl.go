@@ -13,10 +13,9 @@ type timeTickerImpl struct {
 
 var _ TimeTicker = (*timeTickerImpl)(nil)
 
-func NewTimer(d time.Duration) *timeTickerImpl {
+func NewTimer(d time.Duration) TimeTicker {
 	t := &timeTickerImpl{
-		tickerImpl: *New[time.Time](),
-		resetCh:    make(chan time.Duration),
+		resetCh: make(chan time.Duration),
 	}
 	t.Reset(d)
 	return t

@@ -1,6 +1,6 @@
-# Go-ticks
+# Goticks
 
-Go-ticks is a lightweight library for managing periodic tasks in your Go applications.
+Goticks is a lightweight library for managing periodic tasks in your Go applications.
 
 ## Rationale
 
@@ -27,26 +27,39 @@ func ExampleNewTicker() {
 }
 ```
 
-What could be improved:
+The following might be needed to build a real use case:
 
-- Separation of concerns:
-  - a ticker: the tick generator;
-  - a task runner: the middleware that executes the task on ticker ticks;
-  - a task: the code to be executed by the runner.
-- Graceful termination: the task has to be provided with a context, that is cancelled by the controller demand.
+- Concerns should be better separated to:
+  - a task: the business logic to be executed by the runner;
+  - a ticker: the tick generator, replacable with a different implementation;
+  - a task runner: the middleware that executes the task on ticker ticks, logs the execution
+    process, retries on failure, etc.
+- Graceful termination: the task has to be provided with a cancellable context.
 - Task failure handling: the task should be able to notify the task runner about a permanent error.
 - The ticker has to be stoppable and restartable.
 - The first tick should arrive on start (not after first period).
 
 This library assembles a set of types, that implement the above.
 
-## Features
+## Example
 
-- Simple and intuitive interface for scheduling periodic tasks:
-  - `Start()` for (re-)starting the periodic execution;
-  - `Stop()` to gracefully interrupt the execution by cancelling the context;
-  - `Wait()` to wait for the running tasks to terminate;
-  - `Error()` to consult the termination reason.
-- A `Ticker` interface and an implementation that ticks on start.
-- A `TestTicker` implementation of the `Ticker` interface that allows for sending a code controlled ticks.
-- A list of task wrappers, such as `NoOverlap`, `WithRetry` and others.
+```go
+func ExampleNewTask() {
+	ticker := ticker.NewTimer(time.Second)
+	startTime := time.Now()
+
+	NewTask(ticker, func(t time.Time) {
+		fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
+	}).Start()
+
+	time.Sleep(3 * time.Second)
+	ticker.Wait()
+	ticker.Stop()
+
+	// Output:
+	// Current time: 0s
+	// Current time: 1s
+	// Current time: 2s
+	// Current time: 3s
+}
+```

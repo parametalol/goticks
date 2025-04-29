@@ -20,19 +20,19 @@ type taskImpl[TickType any] struct {
 
 var _ Task = (*taskImpl[any])(nil)
 
-func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Ticker[TickType], task Fn) *taskImpl[TickType] {
+func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Ticker[TickType], task Fn) ticker.Restartable {
 	return &taskImpl[TickType]{
 		ticker: ticker,
 		task:   utils.Adapt[TickType](task),
 	}
 }
 
+// Start another task execution loop.
 func (t *taskImpl[TickType]) Start() {
 	go loop.OnTick(t.ticker.Ticks(), t.task)
 }
 
+// Stop all running loops by stopping the ticker.
 func (t *taskImpl[TickType]) Stop() {
-	if tt, ok := t.ticker.(ticker.TimeTicker); ok {
-		tt.Reset(0)
-	}
+	t.ticker.Stop()
 }

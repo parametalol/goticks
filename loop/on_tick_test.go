@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -11,6 +12,11 @@ import (
 	"github.com/parametalol/goticks/utils"
 	"github.com/stretchr/testify/assert"
 )
+
+type tickerWithTick[TickType any] interface {
+	ticker.Ticker[TickType]
+	Tick(TickType) ticker.Waitable
+}
 
 func TestOnTick(t *testing.T) {
 	t.Run("loop on 3 test ticks", func(t *testing.T) {
@@ -62,11 +68,26 @@ func TestOnTick(t *testing.T) {
 
 		err := OnTick(ticks, counter)
 		assert.ErrorIs(t, err, utils.ErrStopped)
+	})
 
+	t.Run("one ticker two loops", func(t *testing.T) {
+		var arr []int
+		collector := func(tick int) {
+			arr = append(arr, tick)
+		}
+		ticker := ticker.New[int]()
+		mux := &sync.Mutex{}
+		for range 3 {
+			go OnTick(ticker.Ticks(), utils.Sync[int](mux, collector))
+		}
+		for tick := range 3 {
+			ticker.Tick(tick).Wait()
+		}
+		assert.Equal(t, []int{0, 0, 0, 1, 1, 1, 2, 2, 2}, arr)
 	})
 }
 
-func tickInRange(ticker ticker.TickerWithTick[int], n int) {
+func tickInRange(ticker tickerWithTick[int], n int) {
 	for tick := range n {
 		ticker.Tick(tick)
 	}
