@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/parametalol/goticks/ticker"
 	"github.com/parametalol/goticks/utils"
@@ -30,7 +31,7 @@ func ExampleNewTask() {
 		utils.WithRetry[int](utils.SimpleRetryPolicy(3),
 			utils.WithLog[int](os.Stdout, os.Stdout, "example",
 				counter))).
-		// Start the process in a goroutine:
+		// Start the ticker loop in a goroutine:
 		Start()
 
 	for tick := range 10 {
@@ -39,13 +40,6 @@ func ExampleNewTask() {
 			// to ensure stable sequential output:
 			Wait()
 	}
-
-	// Let's wait for all currently running ticker senders to complete before
-	// stopping the ticker.
-	ticker.Wait()
-
-	// Stop will cancel the context for the running tasks.
-	ticker.Stop()
 
 	// Output:
 	// Calling example
@@ -64,4 +58,50 @@ func ExampleNewTask() {
 	// Calling example
 	// tick # 3
 	// Execution of example stopped with error: stop error: stopped
+}
+
+func ExampleTask_Stop() {
+	timeMargin := 10 * time.Millisecond
+	startTime := time.Now()
+
+	task := NewTask(ticker.NewTimer(time.Second),
+		func(t time.Time) {
+			fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
+		})
+
+	task.Start()
+	time.Sleep(2*time.Second + timeMargin)
+	task.Stop()
+
+	time.Sleep(2*time.Second - 2*timeMargin)
+
+	task.Start()
+	time.Sleep(2*time.Second + timeMargin)
+	task.Stop()
+
+	// Output:
+	// Current time: 0s
+	// Current time: 1s
+	// Current time: 2s
+	// Current time: 4s
+	// Current time: 5s
+	// Current time: 6s
+}
+
+func ExampleTask_Start() {
+	startTime := time.Now()
+	ticker := ticker.NewTimer(time.Second)
+	NewTask(ticker,
+		func(t time.Time) {
+			fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
+		}).Start()
+
+	time.Sleep(3*time.Second + 10*time.Millisecond)
+	ticker.Stop()
+
+	// Output:
+	// Current time: 0s
+	// Current time: 1s
+	// Current time: 2s
+	// Current time: 3s
 }

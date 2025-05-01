@@ -45,15 +45,13 @@ This library assembles a set of types, that implement the above.
 
 ```go
 func ExampleNewTask() {
-	ticker := ticker.NewTimer(time.Second)
 	startTime := time.Now()
-
-	NewTask(ticker, func(t time.Time) {
-		fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
-	}).Start()
-
+	ticker := ticker.NewTimer(time.Second)
+	NewTask(ticker,
+		func(t time.Time) {
+			fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
+		}).Start()
 	time.Sleep(3 * time.Second)
-	ticker.Wait()
 	ticker.Stop()
 
 	// Output:
