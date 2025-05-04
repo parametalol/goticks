@@ -61,32 +61,38 @@ func ExampleNewTask() {
 }
 
 func ExampleTask_Stop() {
-   // Increase margin to account for timing variability in CI environments
-   timeMargin := 100 * time.Millisecond
-   startTime := time.Now()
-
-	task := NewTask(ticker.NewTimer(time.Second),
-		func(t time.Time) {
-			fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
+	ticker := ticker.New[int]()
+	task := NewTask(ticker,
+		func(tick int) {
+			fmt.Println("Tick:", tick)
 		})
 
+	i := 0
+	sendTicks := func() {
+		for range 3 {
+			ticker.Tick(i).Wait()
+			i++
+		}
+	}
+
 	task.Start()
-	time.Sleep(2*time.Second + timeMargin)
+	sendTicks()
 	task.Stop()
 
-	time.Sleep(2*time.Second - 2*timeMargin)
+	// These ticks are ignored by the task:
+	sendTicks()
 
 	task.Start()
-	time.Sleep(2*time.Second + timeMargin)
+	sendTicks()
 	task.Stop()
 
 	// Output:
-	// Current time: 0s
-	// Current time: 1s
-	// Current time: 2s
-	// Current time: 4s
-	// Current time: 5s
-	// Current time: 6s
+	// Tick: 0
+	// Tick: 1
+	// Tick: 2
+	// Tick: 6
+	// Tick: 7
+	// Tick: 8
 }
 
 func ExampleTask_Start() {

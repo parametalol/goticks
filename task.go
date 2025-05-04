@@ -54,3 +54,8 @@ func (t *taskImpl[TickType]) Start() {
 func (t *taskImpl[TickType]) Stop() {
 	t.paused.Store(true)
 }
+
+// Ticker returns the ticker, used for the task initialization.
+func (t *taskImpl[TickType]) Ticker() ticker.Tickable[TickType] {
+	return t.ticker
+}
