@@ -14,7 +14,7 @@ var ErrStopped = errors.New("stopped")
 
 type attemptNumberCtxKey struct{}
 
-var AttemptNumber = attemptNumberCtxKey{}
+var AttemptNumber attemptNumberCtxKey
 
 // Seq executes a sequence of tasks in order.
 // If one of the tasks fails, the execution stops and returns the error.
