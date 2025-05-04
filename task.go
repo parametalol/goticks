@@ -43,7 +43,9 @@ func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Tickable[TickT
 func (t *taskImpl[TickType]) Start() {
 	t.paused.Store(false)
 	t.once.Do(func() {
-		go loop.OnTick(t.ticker.Ticks(), t.task)
+		go func() {
+			_ = loop.OnTick(t.ticker.Ticks(), t.task)
+		}()
 	})
 }
 

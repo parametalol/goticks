@@ -78,7 +78,7 @@ func TestOnTick(t *testing.T) {
 		ticker := ticker.New[int]()
 		mux := &sync.Mutex{}
 		for range 3 {
-			go OnTick(ticker.Ticks(), utils.Sync[int](mux, collector))
+			go assert.NoError(t, OnTick(ticker.Ticks(), utils.Sync[int](mux, collector)))
 		}
 		for tick := range 3 {
 			ticker.Tick(tick).Wait()

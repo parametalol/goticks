@@ -77,7 +77,9 @@ func TestNoOverlap(t *testing.T) {
 		testCh <- true
 	}
 	fn := NoOverlap[any](task)
-	go fn(context.Background(), 0)
+	go func() {
+		_ = fn(context.Background(), 0)
+	}()
 	<-testCh
 	_ = fn(context.Background(), 0)
 	_ = fn(context.Background(), 0)

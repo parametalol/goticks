@@ -13,12 +13,13 @@ func ExampleWithLog() {
 		return errors.New("test error")
 	})
 
-	f(context.Background(), "tick")
+	fmt.Println("Error:", f(context.Background(), "tick"))
 
 	// Output:
 	// Calling test
 	// tick
 	// Execution of test failed with error: test error
+	// Error: test error
 }
 
 func ExampleAdapt() {
@@ -26,9 +27,7 @@ func ExampleAdapt() {
 		fmt.Println(s)
 		return errors.New("error")
 	}
-	var adaptedF func(context.Context, string) error
-
-	adaptedF = Adapt[string](f)
+	var adaptedF = Adapt[string](f) // func(context.Context, string) error
 	err := adaptedF(context.Background(), "hello")
 	fmt.Println(err)
 

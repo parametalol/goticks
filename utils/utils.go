@@ -12,7 +12,9 @@ import (
 
 var ErrStopped = errors.New("stopped")
 
-var AttemptNumber = struct{}{}
+type attemptNumberCtxKey struct{}
+
+var AttemptNumber = attemptNumberCtxKey{}
 
 // Seq executes a sequence of tasks in order.
 // If one of the tasks fails, the execution stops and returns the error.
@@ -73,27 +75,27 @@ func WithLog[TickType any, Fn Func[TickType]](outW io.Writer, errW io.Writer, na
 	return func(ctx context.Context, tick TickType) error {
 		attempt := getAttemptNumber(ctx)
 		if attempt > 0 {
-			fmt.Fprintln(outW, "Retry", attempt, "of", name)
+			_, _ = fmt.Fprintln(outW, "Retry", attempt, "of", name)
 		} else {
-			fmt.Fprintln(outW, "Calling", name)
+			_, _ = fmt.Fprintln(outW, "Calling", name)
 		}
 		err := adaptedTask(ctx, tick)
 		if err != nil && err != context.Canceled {
 			if errors.Is(err, ErrStopped) {
 				if attempt > 0 {
-					fmt.Fprintln(errW, "Execution of", name, "stopped after retry", attempt, "with error:", err.Error())
+					_, _ = fmt.Fprintln(errW, "Execution of", name, "stopped after retry", attempt, "with error:", err.Error())
 				} else {
-					fmt.Fprintln(errW, "Execution of", name, "stopped with error:", err.Error())
+					_, _ = fmt.Fprintln(errW, "Execution of", name, "stopped with error:", err.Error())
 				}
 			} else {
 				if attempt > 0 {
-					fmt.Fprintln(errW, "Execution of", name, "failed after retry", attempt, "with error:", err.Error())
+					_, _ = fmt.Fprintln(errW, "Execution of", name, "failed after retry", attempt, "with error:", err.Error())
 				} else {
-					fmt.Fprintln(errW, "Execution of", name, "failed with error:", err.Error())
+					_, _ = fmt.Fprintln(errW, "Execution of", name, "failed with error:", err.Error())
 				}
 			}
 		} else if ctx.Err() != nil {
-			fmt.Fprintln(errW, "Execution cancelled for", name)
+			_, _ = fmt.Fprintln(errW, "Execution cancelled for", name)
 		}
 		return err
 	}
