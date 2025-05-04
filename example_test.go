@@ -48,7 +48,7 @@ func ExampleNewTask() {
 	// tick # 1
 	// Calling example
 	// tick # 2
-	// Execution of example failed with error: non-stop error
+	// Execution of example failed after the first attempt with error: non-stop error
 	// Retry 1 of example
 	// tick # 2
 	// Execution of example failed after retry 1 with error: non-stop error
@@ -57,7 +57,7 @@ func ExampleNewTask() {
 	// Execution of example failed after retry 2 with error: non-stop error
 	// Calling example
 	// tick # 3
-	// Execution of example stopped with error: stop error: stopped
+	// Execution of example stopped after the first attempt with error: stop error: stopped
 }
 
 func ExampleTask_Stop() {
