@@ -60,12 +60,9 @@ func WithTimeout[TickType any, Fn Func[TickType]](timeout time.Duration, task Fn
 	}
 }
 
-func getAttemptNumber(ctx context.Context) int {
-	attempt := ctx.Value(AttemptNumber)
-	if attempt != nil {
-		return attempt.(int)
-	}
-	return 0
+func getAttemptNumber(ctx context.Context) (int, bool) {
+	attempt, ok := ctx.Value(AttemptNumber).(int)
+	return attempt, ok
 }
 
 // WithLog adds logging to the task.
@@ -73,29 +70,36 @@ func getAttemptNumber(ctx context.Context) int {
 func WithLog[TickType any, Fn Func[TickType]](outW io.Writer, errW io.Writer, name string, task Fn) func(context.Context, TickType) error {
 	adaptedTask := Adapt[TickType](task)
 	return func(ctx context.Context, tick TickType) error {
-		attempt := getAttemptNumber(ctx)
+		attempt, ok := getAttemptNumber(ctx)
 		if attempt > 0 {
 			_, _ = fmt.Fprintln(outW, "Retry", attempt, "of", name)
 		} else {
 			_, _ = fmt.Fprintln(outW, "Calling", name)
 		}
 		err := adaptedTask(ctx, tick)
-		if err != nil && err != context.Canceled {
+		switch {
+		case err != nil && ctx.Err() == nil:
 			if errors.Is(err, ErrStopped) {
 				if attempt > 0 {
 					_, _ = fmt.Fprintln(errW, "Execution of", name, "stopped after retry", attempt, "with error:", err.Error())
+				} else if ok {
+					_, _ = fmt.Fprintln(errW, "Execution of", name, "stopped after the first attempt with error:", err.Error())
 				} else {
 					_, _ = fmt.Fprintln(errW, "Execution of", name, "stopped with error:", err.Error())
 				}
 			} else {
 				if attempt > 0 {
 					_, _ = fmt.Fprintln(errW, "Execution of", name, "failed after retry", attempt, "with error:", err.Error())
+				} else if ok {
+					_, _ = fmt.Fprintln(errW, "Execution of", name, "failed after the first attempt with error:", err.Error())
 				} else {
 					_, _ = fmt.Fprintln(errW, "Execution of", name, "failed with error:", err.Error())
 				}
 			}
-		} else if ctx.Err() != nil {
+		case ctx.Err() == context.Canceled:
 			_, _ = fmt.Fprintln(errW, "Execution cancelled for", name)
+		case ctx.Err() == context.DeadlineExceeded:
+			_, _ = fmt.Fprintln(errW, "Execution deadline exceeded for", name)
 		}
 		return err
 	}

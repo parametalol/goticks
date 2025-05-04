@@ -60,6 +60,7 @@ func Adapt[TickType any, Fn Func[TickType]](f Fn) func(context.Context, TickType
 	panic("unsupported function signature")
 }
 
+// AdaptT is a [time.Time] specialization of [Adapt].
 func AdaptT[Fn Func[time.Time]](f Fn) func(context.Context, time.Time) error {
 	return Adapt[time.Time](f)
 }

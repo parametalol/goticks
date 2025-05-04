@@ -34,25 +34,106 @@ func (a *arr) Write(data []byte) (int, error) {
 }
 
 func TestWithLog(t *testing.T) {
-	var a = &arr{}
-	err := WithLog[any](a, a, "test", func() error {
-		return errors.New("test")
-	})(context.Background(), nil)
+	t.Run("error", func(t *testing.T) {
+		var a = &arr{}
+		err := WithLog[any](a, a, "test", func() error {
+			return errors.New("test")
+		})(context.Background(), nil)
 
-	assert.Error(t, err)
-	assert.Equal(t, arr{
-		"Calling test\n",
-		"Execution of test failed with error: test\n",
-	}, *a)
+		assert.Error(t, err)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution of test failed with error: test\n",
+		}, *a)
+	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	err = WithLog[any](a, a, "test", func(context.Context) {})(ctx, nil)
-	assert.NoError(t, err)
-	assert.Equal(t, arr{
-		"Calling test\n",
-		"Execution cancelled for test\n",
-	}, (*a)[2:])
+	t.Run("stopped", func(t *testing.T) {
+		var a = &arr{}
+		err := WithLog[any](a, a, "test", func() error {
+			return ErrStopped
+		})(context.Background(), nil)
+
+		assert.ErrorIs(t, err, ErrStopped)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution of test stopped with error: stopped\n",
+		}, *a)
+	})
+
+	t.Run("with cancel", func(t *testing.T) {
+		var a = &arr{}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		err := WithLog[any](a, a, "test", func() {})(ctx, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution cancelled for test\n",
+		}, (*a))
+	})
+
+	t.Run("with deadline", func(t *testing.T) {
+		var a = &arr{}
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now())
+		defer cancel()
+		err := WithLog[any](a, a, "test", func() {})(ctx, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution deadline exceeded for test\n",
+		}, (*a))
+	})
+
+	t.Run("attempt", func(t *testing.T) {
+		var a = &arr{}
+		err := WithRetry[any](SimpleRetryPolicy(2),
+			WithLog[any](a, a, "test",
+				func() error {
+					return errors.New("test")
+				}))(context.Background(), nil)
+		assert.Error(t, err)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution of test failed after the first attempt with error: test\n",
+			"Retry 1 of test\n",
+			"Execution of test failed after retry 1 with error: test\n",
+		}, (*a))
+	})
+
+	t.Run("attempt stopped", func(t *testing.T) {
+		var a = &arr{}
+		err := WithRetry[any](SimpleRetryPolicy(2),
+			WithLog[any](a, a, "test",
+				func() error {
+					return ErrStopped
+				}))(context.Background(), nil)
+		assert.ErrorIs(t, err, ErrStopped)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution of test stopped after the first attempt with error: stopped\n",
+		}, (*a))
+	})
+
+	t.Run("retry stopped", func(t *testing.T) {
+		var a = &arr{}
+		attempt := 0
+		err := WithRetry[any](SimpleRetryPolicy(2),
+			WithLog[any](a, a, "test",
+				func() error {
+					if attempt == 0 {
+						attempt++
+						return errors.New("test")
+					}
+					return ErrStopped
+				}))(context.Background(), nil)
+		assert.ErrorIs(t, err, ErrStopped)
+		assert.Equal(t, arr{
+			"Calling test\n",
+			"Execution of test failed after the first attempt with error: test\n",
+			"Retry 1 of test\n",
+			"Execution of test stopped after retry 1 with error: stopped\n",
+		}, (*a))
+	})
 }
 
 func TestWithTimeout(t *testing.T) {
