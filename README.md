@@ -1,6 +1,6 @@
 # Goticks
 
-[![CI](https://github.com/parametalol/goticks/actions/workflows/ci.yml/badge.svg)](https://github.com/parametalol/goticks/actions/workflows/ci.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/parametalol/goticks.svg)](https://pkg.go.dev/github.com/parametalol/goticks) [![Go Report Card](https://goreportcard.com/badge/github.com/parametalol/goticks)](https://goreportcard.com/report/github.com/parametalol/goticks) [![License](https://img.shields.io/github/license/parametalol/goticks)](./LICENSE)
+[![CI](https://github.com/parametalol/goticks/actions/workflows/ci.yml/badge.svg)](https://github.com/parametalol/goticks/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/parametalol/goticks/branch/main/graph/badge.svg)](https://codecov.io/gh/parametalol/goticks) [![Go Reference](https://pkg.go.dev/badge/github.com/parametalol/goticks.svg)](https://pkg.go.dev/github.com/parametalol/goticks) [![Go Report Card](https://goreportcard.com/badge/github.com/parametalol/goticks)](https://goreportcard.com/report/github.com/parametalol/goticks) [![License](https://img.shields.io/github/license/parametalol/goticks)](./LICENSE)
 
 Goticks is a lightweight Go library for building and managing periodic tasks with support for cancellable contexts, customizable tickers, error handling, and more.
 
