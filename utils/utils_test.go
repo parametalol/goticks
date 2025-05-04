@@ -210,4 +210,35 @@ func TestWithRetry(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, 3, i)
 	})
+	t.Run("cancel with exponential backoff", func(t *testing.T) {
+		var i int
+		task := func() {
+			i++
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		err := WithRetry[any](ExponentialBackoffPolicy(3, time.Millisecond), task)(ctx, 0)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, i)
+	})
+}
+
+func (a *arr) Lock() {
+	a.Write([]byte("locked\n"))
+}
+func (a *arr) Unlock() {
+	a.Write([]byte("unlocked\n"))
+}
+
+func TestSync(t *testing.T) {
+	loglock := &arr{}
+
+	_ = Sync[any](loglock, WithLog[any](loglock, loglock, "test",
+		func() {}))(context.Background(), 0)
+
+	assert.Equal(t, arr{
+		"locked\n",
+		"Calling test\n",
+		"unlocked\n",
+	}, (*loglock))
 }
