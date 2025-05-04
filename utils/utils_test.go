@@ -224,10 +224,10 @@ func TestWithRetry(t *testing.T) {
 }
 
 func (a *arr) Lock() {
-	a.Write([]byte("locked\n"))
+	_, _ = a.Write([]byte("locked\n"))
 }
 func (a *arr) Unlock() {
-	a.Write([]byte("unlocked\n"))
+	_, _ = a.Write([]byte("unlocked\n"))
 }
 
 func TestSync(t *testing.T) {
