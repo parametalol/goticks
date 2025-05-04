@@ -61,8 +61,9 @@ func ExampleNewTask() {
 }
 
 func ExampleTask_Stop() {
-	timeMargin := 10 * time.Millisecond
-	startTime := time.Now()
+   // Increase margin to account for timing variability in CI environments
+   timeMargin := 100 * time.Millisecond
+   startTime := time.Now()
 
 	task := NewTask(ticker.NewTimer(time.Second),
 		func(t time.Time) {

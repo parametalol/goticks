@@ -1,63 +1,67 @@
 # Goticks
 
-Goticks is a lightweight library for managing periodic tasks in your Go applications.
+[![CI](https://github.com/parametalol/goticks/actions/workflows/ci.yml/badge.svg)](https://github.com/parametalol/goticks/actions/workflows/ci.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/parametalol/goticks.svg)](https://pkg.go.dev/github.com/parametalol/goticks) [![Go Report Card](https://goreportcard.com/badge/github.com/parametalol/goticks)](https://goreportcard.com/report/github.com/parametalol/goticks) [![License](https://img.shields.io/github/license/parametalol/goticks)](./LICENSE)
 
-## Rationale
+Goticks is a lightweight Go library for building and managing periodic tasks with support for cancellable contexts, customizable tickers, error handling, and more.
 
-Consider this example from the standard library, that prints current time every second during 10 seconds period:
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- Modular design: clear separation between tasks, tickers, and runners.
+- Cancellable contexts for graceful shutdown.
+- Customizable tick generators that are restartable and stoppable.
+- Immediate first tick on start.
+- Built-in retry and error handling support.
+- Zero dependencies outside the Go standard library.
+
+## Installation
+
+```bash
+go get github.com/parametalol/goticks
+```
+
+## Usage
 
 ```go
-func ExampleNewTicker() {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	done := make(chan bool)
-	go func() {
-		time.Sleep(10 * time.Second)
-		done <- true
-	}()
-	for {
-		select {
-		case <-done:
-			fmt.Println("Done!")
-			return
-		case t := <-ticker.C:
-			fmt.Println("Current time: ", t)
-		}
-	}
+package main
+
+import (
+    "fmt"
+    "time"
+
+    "github.com/parametalol/goticks"
+    "github.com/parametalol/goticks/ticker"
+)
+
+func main() {
+    start := time.Now()
+    t := ticker.NewTimer(time.Second)
+    goticks.NewTask(t, func(t time.Time) {
+        fmt.Println("Current time:", t.Sub(start).Round(time.Second))
+    }).Start()
+
+    // Let it run for 3 seconds.
+    time.Sleep(3 * time.Second)
+    t.Stop()
 }
 ```
 
-The following might be needed to build a real use case:
+## API Reference
 
-- Concerns should be better separated to:
-  - a task: the business logic to be executed by the runner;
-  - a ticker: the tick generator, replacable with a different implementation;
-  - a task runner: the middleware that executes the task on ticker ticks, logs the execution
-    process, retries on failure, etc.
-- Graceful termination: the task has to be provided with a cancellable context.
-- Task failure handling: the task should be able to notify the task runner about a permanent error.
-- The ticker has to be stoppable and restartable.
-- The first tick should arrive on start (not after first period).
+Detailed documentation is available on [pkg.go.dev](https://pkg.go.dev/github.com/parametalol/goticks).
 
-This library assembles a set of types, that implement the above.
+## Contributing
 
-## Example
+Contributions, issues, and feature requests are welcome! Please check [issues](https://github.com/parametalol/goticks/issues) or submit a pull request.
 
-```go
-func ExampleNewTask() {
-	startTime := time.Now()
-	ticker := ticker.NewTimer(time.Second)
-	NewTask(ticker,
-		func(t time.Time) {
-			fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
-		}).Start()
-	time.Sleep(3 * time.Second)
-	ticker.Stop()
+## License
 
-	// Output:
-	// Current time: 0s
-	// Current time: 1s
-	// Current time: 2s
-	// Current time: 3s
-}
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
