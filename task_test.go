@@ -61,7 +61,6 @@ func TestTask(t *testing.T) {
 	t.Run("on start", func(t *testing.T) {
 		ticker := ticker.New[int]()
 
-		onstopch := make(chan bool)
 		var ticks []int
 		task := NewTask(ticker, func(tick int) {
 			ticks = append(ticks, tick)
@@ -70,7 +69,6 @@ func TestTask(t *testing.T) {
 			return errors.New("that's ok")
 		}), WithOnStop(func() {
 			ticks = append(ticks, -1)
-			onstopch <- true
 		}),
 		)
 
@@ -82,7 +80,6 @@ func TestTask(t *testing.T) {
 		ticker.Tick(101).Wait()
 
 		task.Stop()
-		<-onstopch
 
 		assert.Equal(t, []int{0, 1, 10, 101, -1}, ticks)
 	})
