@@ -28,7 +28,12 @@ type taskImpl[TickType any] struct {
 
 var _ Task = (*taskImpl[any])(nil)
 
-func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Tickable[TickType], fn Fn, opts ...option) ticker.Restartable {
+type RestartableWithTicker[TickType any] interface {
+	ticker.Restartable
+	Ticker() ticker.Tickable[TickType]
+}
+
+func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Tickable[TickType], fn Fn, opts ...option) RestartableWithTicker[TickType] {
 	task := &taskImpl[TickType]{
 		ticker: ticker,
 	}
@@ -65,6 +70,11 @@ func (t *taskImpl[TickType]) Start() {
 // Stop all running loops by stopping the ticker.
 func (t *taskImpl[TickType]) Stop() {
 	if t.started.Swap(false) && t.options.onStop != nil {
-		go t.options.onStop()
+		t.options.onStop()
 	}
+}
+
+// Ticker returns the ticker, used for the task initialization.
+func (t *taskImpl[TickType]) Ticker() ticker.Tickable[TickType] {
+	return t.ticker
 }
