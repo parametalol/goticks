@@ -8,7 +8,7 @@ import (
 )
 
 func ExampleWithLog() {
-	f := WithLog[string](os.Stdout, os.Stdout, "test", func(msg string) error {
+	f := Log[string](os.Stdout, os.Stdout, "test", func(msg string) error {
 		fmt.Println(msg)
 		return errors.New("test error")
 	})

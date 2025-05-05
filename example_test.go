@@ -28,8 +28,8 @@ func ExampleNewTask() {
 	// NewTask initializes a procedure to call counter on the ticker ticks, log
 	// the attempts and the errors, and retry 2 times on non-permanent errors.
 	NewTask(ticker,
-		utils.WithRetry[int](utils.SimpleRetryPolicy(3),
-			utils.WithLog[int](os.Stdout, os.Stdout, "example",
+		utils.Retry[int](utils.SimpleRetryPolicy(3),
+			utils.Log[int](os.Stdout, os.Stdout, "example",
 				counter))).
 		// Start the ticker loop in a goroutine:
 		Start()

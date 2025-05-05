@@ -36,7 +36,7 @@ func (a *arr) Write(data []byte) (int, error) {
 func TestWithLog(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		var a = &arr{}
-		err := WithLog[any](a, a, "test", func() error {
+		err := Log[any](a, a, "test", func() error {
 			return errors.New("test")
 		})(context.Background(), nil)
 
@@ -49,7 +49,7 @@ func TestWithLog(t *testing.T) {
 
 	t.Run("stopped", func(t *testing.T) {
 		var a = &arr{}
-		err := WithLog[any](a, a, "test", func() error {
+		err := Log[any](a, a, "test", func() error {
 			return ErrStopped
 		})(context.Background(), nil)
 
@@ -64,7 +64,7 @@ func TestWithLog(t *testing.T) {
 		var a = &arr{}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		err := WithLog[any](a, a, "test", func() {})(ctx, nil)
+		err := Log[any](a, a, "test", func() {})(ctx, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, arr{
 			"Calling test\n",
@@ -76,7 +76,7 @@ func TestWithLog(t *testing.T) {
 		var a = &arr{}
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now())
 		defer cancel()
-		err := WithLog[any](a, a, "test", func() {})(ctx, nil)
+		err := Log[any](a, a, "test", func() {})(ctx, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, arr{
 			"Calling test\n",
@@ -86,8 +86,8 @@ func TestWithLog(t *testing.T) {
 
 	t.Run("attempt", func(t *testing.T) {
 		var a = &arr{}
-		err := WithRetry[any](SimpleRetryPolicy(2),
-			WithLog[any](a, a, "test",
+		err := Retry[any](SimpleRetryPolicy(2),
+			Log[any](a, a, "test",
 				func() error {
 					return errors.New("test")
 				}))(context.Background(), nil)
@@ -102,8 +102,8 @@ func TestWithLog(t *testing.T) {
 
 	t.Run("attempt stopped", func(t *testing.T) {
 		var a = &arr{}
-		err := WithRetry[any](SimpleRetryPolicy(2),
-			WithLog[any](a, a, "test",
+		err := Retry[any](SimpleRetryPolicy(2),
+			Log[any](a, a, "test",
 				func() error {
 					return ErrStopped
 				}))(context.Background(), nil)
@@ -117,8 +117,8 @@ func TestWithLog(t *testing.T) {
 	t.Run("retry stopped", func(t *testing.T) {
 		var a = &arr{}
 		attempt := 0
-		err := WithRetry[any](SimpleRetryPolicy(2),
-			WithLog[any](a, a, "test",
+		err := Retry[any](SimpleRetryPolicy(2),
+			Log[any](a, a, "test",
 				func() error {
 					if attempt == 0 {
 						attempt++
@@ -140,7 +140,7 @@ func TestWithTimeout(t *testing.T) {
 	var deadline time.Time
 	var ok bool
 	now := time.Now()
-	err := WithTimeout[any](0, func(ctx context.Context) error {
+	err := Timeout[any](0, func(ctx context.Context) error {
 		deadline, ok = ctx.Deadline()
 		return ctx.Err()
 	})(context.Background(), 0)
@@ -176,7 +176,7 @@ func TestWithRetry(t *testing.T) {
 			i++
 			return errors.New("test")
 		}
-		err := WithRetry[any](SimpleRetryPolicy(3), task)(context.Background(), 0)
+		err := Retry[any](SimpleRetryPolicy(3), task)(context.Background(), 0)
 		assert.Error(t, err)
 		assert.Equal(t, 3, i)
 	})
@@ -185,7 +185,7 @@ func TestWithRetry(t *testing.T) {
 		task := func() {
 			i++
 		}
-		err := WithRetry[any](SimpleRetryPolicy(3), task)(context.Background(), 0)
+		err := Retry[any](SimpleRetryPolicy(3), task)(context.Background(), 0)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, i)
 	})
@@ -196,7 +196,7 @@ func TestWithRetry(t *testing.T) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		err := WithRetry[any](SimpleRetryPolicy(3), task)(ctx, 0)
+		err := Retry[any](SimpleRetryPolicy(3), task)(ctx, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, i)
 	})
@@ -206,7 +206,7 @@ func TestWithRetry(t *testing.T) {
 			i++
 			return errors.New("test")
 		}
-		err := WithRetry[any](ExponentialBackoffPolicy(3, time.Millisecond), task)(context.Background(), 0)
+		err := Retry[any](ExponentialBackoffPolicy(3, time.Millisecond), task)(context.Background(), 0)
 		assert.Error(t, err)
 		assert.Equal(t, 3, i)
 	})
@@ -217,7 +217,7 @@ func TestWithRetry(t *testing.T) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		err := WithRetry[any](ExponentialBackoffPolicy(3, time.Millisecond), task)(ctx, 0)
+		err := Retry[any](ExponentialBackoffPolicy(3, time.Millisecond), task)(ctx, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, i)
 	})
@@ -233,7 +233,7 @@ func (a *arr) Unlock() {
 func TestSync(t *testing.T) {
 	loglock := &arr{}
 
-	_ = Sync[any](loglock, WithLog[any](loglock, loglock, "test",
+	_ = Sync[any](loglock, Log[any](loglock, loglock, "test",
 		func() {}))(context.Background(), 0)
 
 	assert.Equal(t, arr{

@@ -48,10 +48,10 @@ func Sync[TickType any, Fn Func[TickType]](locker sync.Locker, task Fn) func(con
 	}
 }
 
-// WithTimeout sets a timeout for the task.
+// Timeout sets a timeout for the task.
 // If the task does not finish before the timeout, the context will be
 // cancelled.
-func WithTimeout[TickType any, Fn Func[TickType]](timeout time.Duration, task Fn) func(context.Context, TickType) error {
+func Timeout[TickType any, Fn Func[TickType]](timeout time.Duration, task Fn) func(context.Context, TickType) error {
 	adaptedTask := Adapt[TickType](task)
 	return func(ctx context.Context, tick TickType) error {
 		ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -65,9 +65,9 @@ func getAttemptNumber(ctx context.Context) (int, bool) {
 	return attempt, ok
 }
 
-// WithLog adds logging to the task.
+// Log adds logging to the task.
 // It will log the task name on every invocation, and the error if it occurs.
-func WithLog[TickType any, Fn Func[TickType]](outW io.Writer, errW io.Writer, name string, task Fn) func(context.Context, TickType) error {
+func Log[TickType any, Fn Func[TickType]](outW io.Writer, errW io.Writer, name string, task Fn) func(context.Context, TickType) error {
 	adaptedTask := Adapt[TickType](task)
 	return func(ctx context.Context, tick TickType) error {
 		attempt, ok := getAttemptNumber(ctx)
@@ -146,9 +146,9 @@ func ExponentialBackoffPolicy(attempts int, duration time.Duration) RetryPolicy 
 	}
 }
 
-// WithRetry retries the task if it returns an error.
+// Retry retries the task if it returns an error.
 // It will retry to run the task according to the policy function.
-func WithRetry[TickType any, Fn Func[TickType]](policy RetryPolicy, task Fn) func(context.Context, TickType) error {
+func Retry[TickType any, Fn Func[TickType]](policy RetryPolicy, task Fn) func(context.Context, TickType) error {
 	adaptedTask := Adapt[TickType](task)
 	return func(ctx context.Context, tick TickType) error {
 		var err error
