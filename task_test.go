@@ -2,8 +2,11 @@ package goticks
 
 import (
 	"errors"
+	"slices"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/parametalol/goticks/ticker"
 	"github.com/parametalol/goticks/utils"
@@ -57,7 +60,9 @@ func TestTask(t *testing.T) {
 
 		assert.Equal(t, int32(3*(1+10+101)), i.Load())
 	})
+}
 
+func Test_options(t *testing.T) {
 	t.Run("on start", func(t *testing.T) {
 		ticker := ticker.New[int]()
 
@@ -109,4 +114,43 @@ func TestTask(t *testing.T) {
 		assert.Equal(t, []int{0}, ticks)
 	})
 
+	t.Run("WithTickerStop", func(t *testing.T) {
+		ticker := ticker.NewTimer(time.Second)
+
+		task := NewTask(ticker, func() {},
+			WithTickerStop())
+
+		var ticks []time.Time
+		tickerTicks := ticker.Ticks()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			ticks = slices.Collect(tickerTicks)
+			wg.Done()
+		}()
+		task.Start()
+		time.Sleep(time.Second)
+		task.Stop()
+
+		time.Sleep(2 * time.Second)
+
+		wg.Wait()
+		assert.Len(t, ticks, 1)
+	})
+
+	t.Run("task stop and start WithTickerStop", func(t *testing.T) {
+		ticker := ticker.New[int]()
+
+		var ticks []int
+		task := NewTask(ticker, func(tick int) {
+			ticks = append(ticks, tick)
+		}, WithTickerStop())
+		task.Start()
+		ticker.Tick(1).Wait()
+		task.Stop()
+		ticker.Tick(10).Wait()
+		task.Start()
+		ticker.Tick(101).Wait()
+		assert.Equal(t, []int{1, 101}, ticks)
+	})
 }

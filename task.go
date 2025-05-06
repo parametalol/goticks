@@ -3,7 +3,6 @@ package goticks
 import (
 	"context"
 	"errors"
-	"sync"
 	"sync/atomic"
 
 	"github.com/parametalol/goticks/loop"
@@ -22,7 +21,7 @@ type taskImpl[TickType any] struct {
 
 	options options
 
-	once    sync.Once
+	once    atomic.Bool
 	started atomic.Bool
 }
 
@@ -33,6 +32,20 @@ type RestartableWithTicker[TickType any] interface {
 	Ticker() ticker.Tickable[TickType]
 }
 
+// NewTask returns an instance of a restartable task, executed on the ticker
+// ticks.
+//
+// The execution of tasks is paused on [Stop] and resumed on [Start] without
+// affecting the ticker unless [WithTickerStop] is provided.
+//
+// If [WithTickerStop] is provided as an option, the ticker will be stopped on
+// [Stop], which will interrupt all current ticks consumers. It will also be
+// started on [Start], but the previously stopped consumers, except the current
+// task, will not restart.
+//
+// Example:
+//
+//	NewTask(ticker.NewTimer(time.Second), task).Start() // run task every second
 func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Tickable[TickType], fn Fn, opts ...option) RestartableWithTicker[TickType] {
 	task := &taskImpl[TickType]{
 		ticker: ticker,
@@ -50,26 +63,35 @@ func NewTask[TickType any, Fn utils.Func[TickType]](ticker ticker.Tickable[TickT
 	return task
 }
 
-// Start another task execution loop.
+// Start the task execution loop, once.
 func (t *taskImpl[TickType]) Start() {
-	if t.started.Load() {
+	if t.started.Swap(true) {
 		return
 	}
 	if t.options.onStart != nil && errors.Is(t.options.onStart(), utils.ErrStopped) {
+		t.started.Store(false)
 		return
 	}
-	t.started.Store(true)
-	t.once.Do(func() {
+	if !t.once.Swap(true) {
 		ticks := t.ticker.Ticks()
 		go func() {
 			_ = loop.OnTick(ticks, t.task)
 		}()
-	})
+	}
 }
 
 // Stop all running loops by stopping the ticker.
 func (t *taskImpl[TickType]) Stop() {
-	if t.started.Swap(false) && t.options.onStop != nil {
+	if !t.started.Swap(false) {
+		return
+	}
+	if t.options.stopTicker {
+		if ticker, isStoppable := t.ticker.(ticker.Stoppable); isStoppable {
+			ticker.Stop()
+			t.once.Store(false)
+		}
+	}
+	if t.options.onStop != nil {
 		t.options.onStop()
 	}
 }
