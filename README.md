@@ -43,14 +43,14 @@ import (
 
 func main() {
     start := time.Now()
-    t := ticker.NewTimer(time.Second)
-    goticks.NewTask(t, func(t time.Time) {
-        fmt.Println("Current time:", t.Sub(start).Round(time.Second))
+    ticker := ticker.NewTimer(time.Second)
+    goticks.NewTask(ticker, func(tick time.Time) {
+        fmt.Println("Passed time:", tick.Sub(start).Round(time.Second))
     }).Start()
 
     // Let it run for 3 seconds.
     time.Sleep(3 * time.Second)
-    t.Stop()
+    ticker.Stop()
 }
 ```
 

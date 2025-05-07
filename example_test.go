@@ -97,18 +97,19 @@ func ExampleTask_Stop() {
 
 func ExampleTask_Start() {
 	startTime := time.Now()
-	ticker := ticker.NewTimer(time.Second)
-	NewTask(ticker,
+	task := NewTask(ticker.NewTimer(time.Second),
 		func(t time.Time) {
-			fmt.Println("Current time:", t.Sub(startTime).Round(time.Second))
-		}).Start()
+			fmt.Println("Passed time:", t.Sub(startTime).Round(time.Second))
+		},
+		WithTickerStop())
 
+	task.Start()
 	time.Sleep(3*time.Second + 10*time.Millisecond)
-	ticker.Stop()
+	task.Stop()
 
 	// Output:
-	// Current time: 0s
-	// Current time: 1s
-	// Current time: 2s
-	// Current time: 3s
+	// Passed time: 0s
+	// Passed time: 1s
+	// Passed time: 2s
+	// Passed time: 3s
 }
