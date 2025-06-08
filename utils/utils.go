@@ -8,6 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/parametalol/curry"
 )
 
 var ErrStopped = errors.New("stopped")
@@ -15,6 +17,19 @@ var ErrStopped = errors.New("stopped")
 type attemptNumberCtxKey struct{}
 
 var AttemptNumber attemptNumberCtxKey
+
+type Func[TickType any] interface {
+	curry.FuncTwo[context.Context, TickType, error]
+}
+
+func Adapt[TickType any, Fn Func[TickType]](task Fn) func(context.Context, TickType) error {
+	return curry.AdaptTwo[context.Context, TickType, error](task)
+}
+
+// AdaptT is a [time.Time] specialization of [Adapt].
+func AdaptT[Fn Func[time.Time]](task Fn) func(context.Context, time.Time) error {
+	return Adapt[time.Time](task)
+}
 
 // Seq executes a sequence of tasks in order.
 // If one of the tasks fails, the execution stops and returns the error.
