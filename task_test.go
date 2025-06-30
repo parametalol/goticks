@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/parametalol/curry/assert"
 	"github.com/parametalol/goticks/ticker"
 	"github.com/parametalol/goticks/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTask(t *testing.T) {
@@ -26,7 +26,8 @@ func TestTask(t *testing.T) {
 		ticker.Tick(10).Wait()
 		ticker.Tick(101).Wait()
 
-		assert.Equal(t, []int{1, 10, 101}, ticks)
+		assert.That(t,
+			assert.EqualSlices([]int{1, 10, 101}, ticks))
 	})
 
 	t.Run("task stop and start", func(t *testing.T) {
@@ -42,7 +43,8 @@ func TestTask(t *testing.T) {
 		ticker.Tick(10).Wait()
 		task.Start()
 		ticker.Tick(101).Wait()
-		assert.Equal(t, []int{1, 101}, ticks)
+		assert.That(t,
+			assert.EqualSlices([]int{1, 101}, ticks))
 	})
 
 	t.Run("ont ticker, three tasks", func(t *testing.T) {
@@ -58,7 +60,8 @@ func TestTask(t *testing.T) {
 		ticker.Tick(10).Wait()
 		ticker.Tick(101).Wait()
 
-		assert.Equal(t, int32(3*(1+10+101)), i.Load())
+		assert.That(t,
+			assert.Equal(int32(3*(1+10+101)), i.Load()))
 	})
 }
 
@@ -86,7 +89,8 @@ func Test_options(t *testing.T) {
 
 		task.Stop()
 
-		assert.Equal(t, []int{0, 1, 10, 101, -1}, ticks)
+		assert.That(t,
+			assert.EqualSlices([]int{0, 1, 10, 101, -1}, ticks))
 	})
 
 	t.Run("error on start", func(t *testing.T) {
@@ -111,7 +115,8 @@ func Test_options(t *testing.T) {
 
 		task.Stop()
 
-		assert.Equal(t, []int{0}, ticks)
+		assert.That(t,
+			assert.EqualSlices([]int{0}, ticks))
 	})
 
 	t.Run("WithTickerStop", func(t *testing.T) {
@@ -135,7 +140,8 @@ func Test_options(t *testing.T) {
 		time.Sleep(2 * time.Second)
 
 		wg.Wait()
-		assert.Len(t, ticks, 1)
+		assert.That(t,
+			assert.Equal(1, len(ticks)))
 	})
 
 	t.Run("task stop and start WithTickerStop", func(t *testing.T) {
@@ -151,6 +157,7 @@ func Test_options(t *testing.T) {
 		ticker.Tick(10).Wait()
 		task.Start()
 		ticker.Tick(101).Wait()
-		assert.Equal(t, []int{1, 101}, ticks)
+		assert.That(t,
+			assert.EqualSlices([]int{1, 101}, ticks))
 	})
 }

@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/parametalol/curry/assert"
 )
 
 func Test_consumer(t *testing.T) {
@@ -23,7 +23,8 @@ func Test_consumer(t *testing.T) {
 		c.send(100)
 		c.close()
 		<-done
-		assert.Equal(t, int32(111), i.Load())
+		assert.That(t,
+			assert.Equal(int32(111), i.Load()))
 	})
 
 	t.Run("close while sending", func(t *testing.T) {

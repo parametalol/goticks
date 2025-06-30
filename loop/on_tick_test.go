@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/parametalol/curry/assert"
 	"github.com/parametalol/goticks/ticker"
 	"github.com/parametalol/goticks/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 type tickerWithTick[TickType any] interface {
@@ -30,8 +30,9 @@ func TestOnTick(t *testing.T) {
 			i.Add(int32(tick))
 		}))
 
-		assert.Nil(t, err)
-		assert.Equal(t, int32(3), i.Load())
+		assert.That(t,
+			assert.NoError(err),
+			assert.Equal(int32(3), i.Load()))
 	})
 
 	t.Run("failing function", func(t *testing.T) {
@@ -44,7 +45,8 @@ func TestOnTick(t *testing.T) {
 		err := OnTick(ticks, func(context.Context, int) error {
 			return errTest
 		})
-		assert.ErrorIs(t, err, errTest)
+		assert.That(t,
+			assert.ErrorIs(err, errTest))
 	})
 
 	t.Run("error handling", func(t *testing.T) {
@@ -67,7 +69,8 @@ func TestOnTick(t *testing.T) {
 		go tickInRange(ticker, 5)
 
 		err := OnTick(ticks, counter)
-		assert.ErrorIs(t, err, utils.ErrStopped)
+		assert.That(t,
+			assert.ErrorIs(err, utils.ErrStopped))
 	})
 
 	t.Run("one ticker two loops", func(t *testing.T) {
@@ -86,7 +89,8 @@ func TestOnTick(t *testing.T) {
 		for tick := range 3 {
 			ticker.Tick(tick).Wait()
 		}
-		assert.Equal(t, []int{0, 0, 0, 1, 1, 1, 2, 2, 2}, arr)
+		assert.That(t,
+			assert.EqualSlices([]int{0, 0, 0, 1, 1, 1, 2, 2, 2}, arr))
 	})
 }
 
