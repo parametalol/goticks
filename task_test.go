@@ -133,9 +133,9 @@ func Test_options(t *testing.T) {
 			ticks = slices.Collect(tickerTicks)
 			wg.Done()
 		}()
-		task.Start()
-		time.Sleep(time.Second)
-		task.Stop()
+		task.Start() // one tick on start.
+		time.Sleep(500 * time.Millisecond)
+		task.Stop() // stop before the first timed tick.
 
 		time.Sleep(2 * time.Second)
 
