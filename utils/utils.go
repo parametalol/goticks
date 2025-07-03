@@ -19,11 +19,11 @@ type attemptNumberCtxKey struct{}
 var AttemptNumber attemptNumberCtxKey
 
 type Func[TickType any] interface {
-	curry.FuncTwo[context.Context, TickType, error]
+	curry.Func2R[context.Context, TickType, error]
 }
 
 func Adapt[TickType any, Fn Func[TickType]](task Fn) func(context.Context, TickType) error {
-	return curry.AdaptTwo[context.Context, TickType, error](task)
+	return curry.Adapt2R[context.Context, TickType, error](task)
 }
 
 // AdaptT is a [time.Time] specialization of [Adapt].
